@@ -18,8 +18,8 @@ class ExcelStatsAnalyzer:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("Excel Stats Analyzer")
-        self.root.geometry("700x600")
-        self.root.minsize(600, 500)
+        self.root.geometry("700x650")
+        self.root.minsize(600, 550)
         
         # Configure style
         self.style = ttk.Style()
@@ -31,6 +31,7 @@ class ExcelStatsAnalyzer:
         self.sheet_names: List[str] = []
         self.sheet_checkboxes: Dict[str, tk.BooleanVar] = {}
         self.is_processing = False
+        self.output_mode_var: Optional[tk.StringVar] = None  # 'separate' or 'consolidated'
         
         # Build UI
         self._create_widgets()
@@ -68,6 +69,14 @@ class ExcelStatsAnalyzer:
                            foreground=fg_color,
                            font=("Helvetica", 11))
         self.style.map("TCheckbutton",
+                      background=[("active", bg_color)],
+                      foreground=[("active", accent_color)])
+        
+        self.style.configure("TRadiobutton", 
+                           background=bg_color, 
+                           foreground=fg_color,
+                           font=("Helvetica", 11))
+        self.style.map("TRadiobutton",
                       background=[("active", bg_color)],
                       foreground=[("active", accent_color)])
         
@@ -153,6 +162,31 @@ class ExcelStatsAnalyzer:
             style="Subtitle.TLabel"
         )
         self.placeholder_label.pack(pady=20)
+        
+        # Output Format Section
+        output_format_frame = ttk.Frame(main_frame)
+        output_format_frame.pack(fill=tk.X, pady=(0, 20))
+        
+        ttk.Label(output_format_frame, text="Step 3: Output Format").pack(anchor=tk.W, pady=(0, 10))
+        
+        self.output_mode_var = tk.StringVar(value="separate")
+        
+        radio_frame = ttk.Frame(output_format_frame)
+        radio_frame.pack(fill=tk.X)
+        
+        ttk.Radiobutton(
+            radio_frame,
+            text="Separate Sheets (each sheet's stats in its own tab)",
+            variable=self.output_mode_var,
+            value="separate"
+        ).pack(anchor=tk.W, padx=10, pady=2)
+        
+        ttk.Radiobutton(
+            radio_frame,
+            text="Consolidated Sheet (all stats in a single tab)",
+            variable=self.output_mode_var,
+            value="consolidated"
+        ).pack(anchor=tk.W, padx=10, pady=2)
         
         # Progress Section
         progress_frame = ttk.Frame(main_frame)
@@ -291,6 +325,7 @@ class ExcelStatsAnalyzer:
         self.sheet_names = []
         self.sheet_checkboxes.clear()
         self.select_all_var.set(False)
+        self.output_mode_var.set("separate")
         self.progress_var.set(0)
         self.status_var.set("Ready")
         
@@ -355,7 +390,8 @@ class ExcelStatsAnalyzer:
                 
             # Generate output file
             self._update_ui(90, "Generating output file...")
-            output_path = self._generate_output(results)
+            output_mode = self.output_mode_var.get()
+            output_path = self._generate_output(results, output_mode)
             
             self._update_ui(100, f"Complete! Output saved to: {os.path.basename(output_path)}")
             
@@ -408,29 +444,59 @@ class ExcelStatsAnalyzer:
             
         return pd.DataFrame(stats_data)
         
-    def _generate_output(self, results: Dict[str, pd.DataFrame]) -> str:
+    def _generate_output(self, results: Dict[str, pd.DataFrame], output_mode: str) -> str:
         """Generate output Excel file with results."""
         # Create output filename
         input_path = Path(self.input_file_path)
-        output_filename = f"{input_path.stem}_stats.xlsx"
-        output_path = input_path.parent / output_filename
+        base_filename = f"{input_path.stem}_stats"
+        output_path = input_path.parent / f"{base_filename}.xlsx"
+        
+        # Handle existing file - append number if file exists
+        counter = 1
+        while output_path.exists():
+            output_path = input_path.parent / f"{base_filename}_{counter}.xlsx"
+            counter += 1
         
         # Write results to Excel
         with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
-            for sheet_name, stats_df in results.items():
-                # Truncate sheet name if too long (Excel limit is 31 chars)
-                safe_sheet_name = sheet_name[:28] + "..." if len(sheet_name) > 31 else sheet_name
-                stats_df.to_excel(writer, sheet_name=safe_sheet_name, index=False)
+            if output_mode == "consolidated":
+                # Combine all results into a single sheet with Sheet Name column
+                consolidated_data = []
+                for sheet_name, stats_df in results.items():
+                    # Add Sheet Name column at the front
+                    stats_with_sheet = stats_df.copy()
+                    stats_with_sheet.insert(0, 'Sheet Name', sheet_name)
+                    consolidated_data.append(stats_with_sheet)
+                
+                # Concatenate all dataframes
+                consolidated_df = pd.concat(consolidated_data, ignore_index=True)
+                consolidated_df.to_excel(writer, sheet_name="Consolidated Stats", index=False)
                 
                 # Auto-adjust column widths
-                worksheet = writer.sheets[safe_sheet_name]
-                for idx, column in enumerate(stats_df.columns):
+                worksheet = writer.sheets["Consolidated Stats"]
+                for idx, column in enumerate(consolidated_df.columns):
                     max_length = max(
-                        stats_df[column].astype(str).apply(len).max(),
+                        consolidated_df[column].astype(str).apply(len).max(),
                         len(column)
                     )
                     # Add a little extra space
                     worksheet.column_dimensions[chr(65 + idx)].width = min(max_length + 2, 50)
+            else:
+                # Separate sheets mode (original behavior)
+                for sheet_name, stats_df in results.items():
+                    # Truncate sheet name if too long (Excel limit is 31 chars)
+                    safe_sheet_name = sheet_name[:28] + "..." if len(sheet_name) > 31 else sheet_name
+                    stats_df.to_excel(writer, sheet_name=safe_sheet_name, index=False)
+                    
+                    # Auto-adjust column widths
+                    worksheet = writer.sheets[safe_sheet_name]
+                    for idx, column in enumerate(stats_df.columns):
+                        max_length = max(
+                            stats_df[column].astype(str).apply(len).max(),
+                            len(column)
+                        )
+                        # Add a little extra space
+                        worksheet.column_dimensions[chr(65 + idx)].width = min(max_length + 2, 50)
                     
         return str(output_path)
         
