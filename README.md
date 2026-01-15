@@ -51,46 +51,80 @@ Choose between two output modes:
 ## 🚀 Installation
 
 ### Prerequisites
-- Python 3.8 or higher
-- pip (Python package manager)
+- **Python 3.8 or higher** - [Download Python](https://www.python.org/downloads/) if not installed
+- **pip** - Usually comes with Python installation
 
-### Setup
+### Step 1: Download the Project
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/parthgharat04/Excel_Validator.git
-   cd Excel_Validator
-   ```
+**Option A: Using Git (Recommended)**
+```bash
+git clone https://github.com/parthgharat04/Excel_Validator.git
+cd Excel_Validator
+```
 
-2. **Create a virtual environment** (recommended)
-   ```bash
-   python3 -m venv venv
-   
-   # Activate on macOS/Linux
-   source venv/bin/activate
-   
-   # Activate on Windows
-   venv\Scripts\activate
-   ```
+**Option B: Download as ZIP**
+1. Go to https://github.com/parthgharat04/Excel_Validator
+2. Click the green **Code** button → **Download ZIP**
+3. Extract the ZIP file to your desired location
+4. Open terminal/command prompt in the extracted folder
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Step 2: Create Virtual Environment
+
+**On macOS/Linux:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+**On Windows:**
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+> 💡 **Note:** After activation, you should see `(venv)` at the start of your command prompt.
+
+### Step 3: Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+This will install:
+- pandas (for data processing)
+- openpyxl (for Excel file handling)
+- xlrd (for legacy Excel support)
+
+### Step 4: Verify Installation
+
+Run this command to check if everything is installed correctly:
+```bash
+python excel_stats_analyzer.py
+```
+
+If the application window opens, you're all set! ✅
 
 ---
 
 ## 📖 Usage
 
-### Running the Application
+### Quick Start
 
-```bash
-# Make sure virtual environment is activated
-./venv/bin/python excel_stats_analyzer.py
+1. **Activate virtual environment** (if not already active)
+   ```bash
+   # macOS/Linux
+   source venv/bin/activate
+   
+   # Windows
+   venv\Scripts\activate
+   ```
 
-# Or on Windows
-venv\Scripts\python excel_stats_analyzer.py
-```
+2. **Run the application**
+   ```bash
+   python excel_stats_analyzer.py
+   ```
+
+3. The application window will open - you're ready to analyze Excel files!
 
 ### Step-by-Step Guide
 
@@ -110,6 +144,17 @@ venv\Scripts\python excel_stats_analyzer.py
    - Click **🔍 Analyze & Generate Report**
    - Monitor progress via the progress bar
    - Output file is saved in the same directory as input
+   - A success message will show the exact output file location
+
+### Running the Application Next Time
+
+After the initial setup, you only need to:
+
+1. Navigate to the project folder
+2. Activate virtual environment: `source venv/bin/activate` (macOS/Linux) or `venv\Scripts\activate` (Windows)
+3. Run: `python excel_stats_analyzer.py`
+
+That's it! 🎉
 
 ---
 
@@ -138,14 +183,39 @@ All sheets combined with source identification:
 
 ---
 
+## 🆘 First Time Users
+
+**Never used Python before?** Follow these steps:
+
+1. **Install Python** from [python.org](https://www.python.org/downloads/)
+   - ✅ Check "Add Python to PATH" during installation (Windows)
+   - ✅ Verify installation: Open terminal and type `python --version`
+
+2. **Download this project** (see Installation Step 1 above)
+
+3. **Open Terminal/Command Prompt** in the project folder
+   - **Windows**: Right-click folder → "Open in Terminal" or Shift+Right-click → "Open PowerShell here"
+   - **macOS**: Right-click folder → "Services" → "New Terminal at Folder"
+   - **Linux**: Right-click folder → "Open Terminal Here"
+
+4. **Follow Installation Steps 2-4** above
+
+5. **Run the app** and start analyzing!
+
+---
+
 ## 🛠️ Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| **File won't load** | Ensure the file is a valid Excel format and not corrupted |
+| **"python: command not found"** | Use `python3` instead of `python` on macOS/Linux, or add Python to your PATH |
+| **"pip: command not found"** | Install pip: `python -m ensurepip --upgrade` or reinstall Python with pip |
+| **Module not found** | Activate virtual environment first: `source venv/bin/activate` (macOS/Linux) or `venv\Scripts\activate` (Windows) |
+| **File won't load** | Ensure the file is a valid Excel format (.xlsx, .xls, .xlsm) and not corrupted |
 | **Permission denied** | Close the input file if it's open in Excel or another application |
-| **Module not found** | Make sure virtual environment is activated and dependencies are installed |
-| **Application not visible** | Check your taskbar/dock - the window may be minimized |
+| **Application not visible** | Check your taskbar/dock - the window may be minimized or behind other windows |
+| **"No module named 'tkinter'"** | Install tkinter: `sudo apt-get install python3-tk` (Linux) or it should come with Python on Windows/macOS |
+| **Virtual environment not activating** | Make sure you're in the project directory and the `venv` folder exists |
 
 ---
 
